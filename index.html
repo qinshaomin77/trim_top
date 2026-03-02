@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RVST — Regenerating Vehicle Speed Trajectories</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green-900:  #064e3b;
+      --green-800:  #065f46;
+      --green-700:  #047857;
+      --green-600:  #059669;
+      --green-500:  #10b981;
+      --green-400:  #34d399;
+      --green-300:  #6ee7b7;
+      --green-200:  #a7f3d0;
+      --green-100:  #d1fae5;
+      --green-50:   #ecfdf5;
+      --teal-600:   #0d9488;
+      --teal-200:   #99f6e4;
+      --lime-500:   #84cc16;
+      --canvas:     #f0fdf4;
+      --panel:      #f6fef9;
+      --surface:    #ffffff;
+      --border:     #bbf7d0;
+      --border-mid: #6ee7b7;
+      --text-hi:    #022c22;
+      --text-md:    #065f46;
+      --text-lo:    #4b8063;
+      --nav-bg:     rgba(240,253,244,0.95);
+      --nav-border: rgba(16,185,129,0.18);
+      --shadow-sm:  0 2px 12px rgba(5,150,105,0.08);
+      --shadow-md:  0 6px 30px rgba(5,150,105,0.14);
+      --shadow-lg:  0 16px 60px rgba(5,150,105,0.20);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body { background: var(--canvas); color: var(--text-hi); font-family: 'Outfit', sans-serif; line-height: 1.7; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--green-500); border-radius: 2px; }
+
+    /* grain */
+    body::after {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: 0.35;
+    }
+
+    /* ── NAV ── */
+    #topnav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      background: var(--nav-bg); border-bottom: 1px solid var(--nav-border);
+      backdrop-filter: blur(16px) saturate(1.6); height: 60px;
+      display: flex; align-items: center; padding: 0 48px;
+    }
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 600;
+      color: var(--green-600); letter-spacing: 0.12em; text-decoration: none;
+      margin-right: 40px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .nav-logo-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green-400); box-shadow: 0 0 8px var(--green-400);
+      animation: blink 2.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.75)} }
+    .nav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+    .nav-link {
+      padding: 6px 14px; border-radius: 7px; font-size: 13px; font-weight: 500;
+      color: var(--text-lo); text-decoration: none; transition: all 0.15s; white-space: nowrap;
+    }
+    .nav-link:hover { color: var(--green-600); background: var(--green-50); }
+
+    /* ── HERO ── */
+    header {
+      position: relative; background: var(--canvas);
+      padding: 116px 60px 88px; text-align: center; overflow: hidden;
+    }
+    header::before {
+      content: ''; position: absolute; width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(16,185,129,0.09) 0%, transparent 70%);
+      top: -150px; left: -150px; pointer-events: none;
+    }
+    header::after {
+      content: ''; position: absolute; width: 550px; height: 550px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(132,204,22,0.07) 0%, transparent 70%);
+      bottom: -100px; right: -100px; pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative; z-index: 2;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .venue-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(5,150,105,0.07); border: 1px solid rgba(5,150,105,0.22);
+      border-radius: 24px; padding: 6px 22px; margin-bottom: 38px;
+    }
+    .venue-badge-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--green-600);
+      box-shadow: 0 0 8px var(--green-500); animation: blink 2s ease-in-out infinite;
+    }
+    .venue-badge-text {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+      color: var(--green-700); letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .venue-spotlight {
+      font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 700;
+      color: var(--lime-500); background: rgba(132,204,22,0.12);
+      border: 1px solid rgba(132,204,22,0.35); border-radius: 12px;
+      padding: 2px 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 96px;
+      font-weight: 400; letter-spacing: -0.01em;
+      background: linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 50%, var(--teal-600) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      display: block; margin-bottom: 14px; line-height: 1.0;
+    }
+    /* ── CHANGE ②: Full title expansion below RVST acronym ── */
+    .hero-title-expand {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+      color: var(--green-600); letter-spacing: 0.10em; text-transform: uppercase;
+      display: block; margin-bottom: 18px; opacity: 0.75;
+    }
+    .hero-title-expand em { font-style: normal; color: var(--green-700); font-weight: 700; }
+    .hero-subtitle {
+      font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 400;
+      color: var(--text-lo); line-height: 1.55; margin-bottom: 56px;
+      max-width: 700px; margin-left: auto; margin-right: auto;
+    }
+
+    /* Author cards */
+    .authors-wrap { margin-bottom: 52px; }
+    .authors-row {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      gap: 18px; margin-bottom: 18px;
+    }
+    .author-card {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 16px; padding: 22px 40px;
+      transition: all 0.2s; min-width: 200px;
+      box-shadow: var(--shadow-sm);
+    }
+    .author-card:hover { background: var(--green-50); border-color: var(--green-500); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .author-name { font-size: 16px; font-weight: 700; color: var(--text-md); }
+    .author-note { font-size: 11px; color: var(--green-600); font-family: 'JetBrains Mono', monospace; }
+    .author-links { display: flex; gap: 8px; }
+    .author-link {
+      display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 7px;
+      background: var(--panel); border: 1px solid var(--border);
+      font-size: 14px; text-decoration: none; transition: all 0.15s; color: inherit;
+    }
+    .author-link:hover { background: var(--green-100); border-color: var(--green-500); transform: scale(1.12); }
+    .affil-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .affil-tag {
+      font-size: 12px; color: var(--text-lo); font-family: 'JetBrains Mono', monospace;
+      background: var(--green-50); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 18px;
+    }
+
+    /* Buttons */
+    .btn-row { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 13px 30px;
+      border-radius: 10px; font-family: 'Outfit', sans-serif;
+      font-size: 14px; font-weight: 600; letter-spacing: 0.03em;
+      text-decoration: none; cursor: pointer; transition: all 0.18s; border: 1.5px solid transparent;
+    }
+    .btn-primary { background: var(--green-600); color: white; border-color: var(--green-600); box-shadow: 0 4px 18px rgba(5,150,105,0.45); }
+    .btn-primary:hover { background: var(--green-500); border-color: var(--green-500); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(5,150,105,0.45); }
+    .btn-ghost { background: var(--surface); color: var(--text-md); border-color: var(--border-mid); }
+    .btn-ghost:hover { background: var(--green-50); border-color: var(--green-600); color: var(--green-700); transform: translateY(-2px); }
+
+    /* ── MAIN ── */
+    main { max-width: 1040px; margin: 0 auto; padding: 72px 60px 20px; position: relative; z-index: 1; }
+
+    /* ── CHANGE ③: Teaser video ── */
+    .teaser-wrap { border-radius: 18px; overflow: hidden; border: 2px solid var(--border); box-shadow: var(--shadow-lg); margin-bottom: 88px; }
+    .teaser-wrap video { width: 100%; display: block; }
+    .teaser-caption { background: var(--panel); color: var(--text-lo); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 13px 22px; border-top: 1px solid var(--border); letter-spacing: 0.04em; }
+    .teaser-caption strong { color: var(--green-700); }
+
+    /* Section */
+    .section { margin-bottom: 88px; }
+    .section-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--green-600); letter-spacing: 0.16em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .section-num-badge { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--green-600), var(--teal-600)); color: white; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .section-title { font-family: 'DM Serif Display', serif; font-size: 42px; color: var(--text-hi); margin-bottom: 28px; line-height: 1.15; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; padding: 28px 36px; margin-bottom: 20px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s; }
+    .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--border-mid); }
+    .card-accent-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--green-600), var(--lime-500), var(--teal-600)); }
+    .card-lead { font-size: 15px; color: var(--text-lo); line-height: 1.72; margin-bottom: 24px; }
+    .card-lead strong { color: var(--text-md); }
+    .card-lead .hl { color: var(--green-600); font-weight: 600; }
+
+    /* Contributions */
+    .contrib-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .contrib-item { background: var(--panel); border: 1.5px solid var(--border); border-radius: 12px; padding: 22px; display: flex; gap: 16px; align-items: flex-start; transition: all 0.2s; }
+    .contrib-item:hover { border-color: var(--green-500); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+    .contrib-num { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--green-600), var(--teal-600)); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: white; flex-shrink: 0; }
+    .contrib-body strong { display: block; font-size: 14px; font-weight: 700; color: var(--text-md); margin-bottom: 6px; }
+    .contrib-body p { font-size: 13px; color: var(--text-lo); line-height: 1.55; }
+
+    /* Pipeline */
+    .pipeline { display: flex; gap: 0; margin-top: 28px; position: relative; }
+    .pipeline::before { content: ''; position: absolute; top: 30px; left: 50px; right: 50px; height: 2px; background: linear-gradient(90deg, var(--green-600), var(--lime-500)); }
+    .pipeline-step { flex: 1; text-align: center; }
+    .step-circle { width: 60px; height: 60px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--green-600); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 24px; box-shadow: var(--shadow-sm); position: relative; z-index: 1; transition: all 0.22s; }
+    .pipeline-step:hover .step-circle { background: var(--green-600); transform: scale(1.08); }
+    .step-label { font-size: 13px; font-weight: 600; color: var(--text-md); margin-bottom: 4px; }
+    .step-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-lo); line-height: 1.4; }
+
+    /* Specs */
+    .specs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 28px; }
+    .spec-card { background: var(--panel); border: 1.5px solid var(--border); border-radius: 12px; padding: 20px 14px; text-align: center; transition: all 0.2s; }
+    .spec-card:hover { border-color: var(--green-500); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+    .spec-icon { font-size: 26px; margin-bottom: 10px; display: block; }
+    .spec-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-lo); margin-bottom: 6px; }
+    .spec-value { font-size: 13px; font-weight: 600; color: var(--text-md); line-height: 1.4; }
+
+    /* Image cards */
+    .img-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-sm); margin-top: 20px; }
+    .img-wrap { background: var(--panel); padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 260px; }
+    .img-wrap.tall { min-height: 360px; }
+    .img-wrap img { width: 100%; max-height: 340px; object-fit: contain; border-radius: 8px; }
+    .img-wrap.tall img { max-height: 420px; }
+    .img-caption { padding: 13px 20px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-lo); line-height: 1.55; }
+    .img-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 0; }
+    .img-grid-2 .img-card { margin-top: 0; }
+
+    /* ── CHANGE ④: Video Carousel for Case Study ── */
+    .video-carousel {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-sm); margin-top: 20px;
+      position: relative;
+    }
+    .video-carousel-track {
+      display: flex; transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+    }
+    .video-carousel-slide {
+      min-width: 100%; position: relative;
+    }
+    .video-carousel-slide video {
+      width: 100%; display: block; max-height: 420px; object-fit: contain;
+      background: #000;
+    }
+    /* slide label overlay */
+    .slide-label-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 10px 18px;
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%);
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+      color: rgba(255,255,255,0.92); letter-spacing: 0.08em; pointer-events: none;
+    }
+    /* nav arrows */
+    .carousel-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.88); border: 1.5px solid var(--border-mid);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 18px; transition: all 0.18s; z-index: 10;
+      box-shadow: var(--shadow-sm); backdrop-filter: blur(4px);
+      color: var(--green-700); line-height: 1;
+    }
+    .carousel-btn:hover { background: var(--green-50); border-color: var(--green-600); transform: translateY(-50%) scale(1.08); }
+    .carousel-btn.prev { left: 14px; }
+    .carousel-btn.next { right: 14px; }
+    /* dots */
+    .carousel-dots {
+      display: flex; justify-content: center; gap: 8px;
+      padding: 12px 20px; background: var(--panel); border-top: 1px solid var(--border);
+    }
+    .carousel-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border-mid); border: none; cursor: pointer;
+      transition: all 0.2s; padding: 0;
+    }
+    .carousel-dot.active { background: var(--green-600); transform: scale(1.3); }
+    /* caption under dots */
+    .carousel-caption {
+      padding: 10px 20px 14px; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--text-lo); line-height: 1.55;
+      border-top: 1px solid var(--border); background: var(--panel);
+      text-align: left;
+    }
+    .carousel-caption span { display: none; }
+    .carousel-caption span.active { display: inline; }
+
+    /* Tabs */
+    .tabs-wrap { margin-top: 28px; }
+    .tab-btns { display: flex; gap: 4px; border-bottom: 2px solid var(--border); }
+    .tab-btn { padding: 10px 24px; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-lo); background: none; border: none; border-bottom: 2.5px solid transparent; margin-bottom: -2px; cursor: pointer; transition: all 0.15s; }
+    .tab-btn:hover { color: var(--green-600); }
+    .tab-btn.active { color: var(--green-600); border-bottom-color: var(--green-600); }
+    .tab-panel { display: none; background: var(--surface); border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 14px 14px; padding: 26px; }
+    .tab-panel.active { display: block; }
+    .sub-tab-btns { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .sub-tab-btn { padding: 6px 18px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; border: 1.5px solid var(--border); background: var(--panel); color: var(--text-lo); cursor: pointer; transition: all 0.15s; }
+    .sub-tab-btn:hover { border-color: var(--green-500); color: var(--green-600); }
+    .sub-tab-btn.active { background: var(--green-50); border-color: var(--green-600); color: var(--text-md); font-weight: 700; }
+    .sub-panel { display: none; }
+    .sub-panel.active { display: block; }
+    .metrics-hint { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-lo); margin-bottom: 16px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; line-height: 1.55; }
+
+    /* Citation */
+    .citation-box { background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; padding: 28px 32px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm); }
+    .citation-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--green-500), var(--lime-500)); }
+    .citation-code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text-md); line-height: 1.85; white-space: pre-wrap; word-break: break-all; position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px 22px; display: block; }
+    .cite-kw { color: var(--green-700); font-weight: 600; }
+    .cite-key { color: var(--teal-600); }
+    .copy-btn { position: absolute; top: 0; right: 0; padding: 7px 16px; background: var(--green-50); border: 1px solid var(--border-mid); border-radius: 0 10px 0 9px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--green-700); cursor: pointer; font-weight: 500; transition: all 0.15s; }
+    .copy-btn:hover { background: var(--green-100); border-color: var(--green-500); }
+
+    /* Acknowledgement */
+    .ack-box { background: linear-gradient(135deg, var(--green-50), var(--teal-200)); border: 1.5px solid var(--border-mid); border-radius: 16px; padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start; }
+    .ack-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--green-600), var(--teal-600)); border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; box-shadow: var(--shadow-sm); }
+    .ack-title { font-size: 14px; font-weight: 700; color: var(--text-md); margin-bottom: 6px; }
+    .ack-body { font-size: 14px; color: var(--text-lo); line-height: 1.6; }
+    code.grant { background: rgba(5,150,105,0.1); border: 1px solid var(--border-mid); border-radius: 5px; padding: 1px 7px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-md); }
+
+    /* Footer */
+    footer { background: var(--canvas); color: var(--text-lo); padding: 48px 60px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; border-top: 1px solid var(--border); }
+    .footer-logo { font-family: 'DM Serif Display', serif; font-size: 34px; color: var(--green-700); margin-bottom: 10px; }
+    .footer-desc { margin-bottom: 18px; }
+    .footer-links { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; margin-bottom: 20px; }
+    .footer-link { color: var(--green-600); text-decoration: none; font-size: 11px; transition: color 0.15s; }
+    .footer-link:hover { color: var(--green-800); }
+    .footer-copy { opacity: 0.45; font-size: 11px; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      header { padding: 100px 36px 72px; }
+      .hero-title { font-size: 72px; }
+      main { max-width: 100%; padding: 72px 36px 20px; }
+    }
+    @media (max-width: 640px) {
+      .nav-links .nav-link { display: none; }
+      header { padding: 100px 20px 60px; }
+      .hero-title { font-size: 56px; }
+      .hero-subtitle { font-size: 17px; }
+      .section-title { font-size: 34px; }
+      .contrib-grid, .img-grid-2 { grid-template-columns: 1fr; }
+      .specs-grid { grid-template-columns: 1fr 1fr; }
+      .pipeline { flex-direction: column; gap: 24px; }
+      .pipeline::before { display: none; }
+      main { padding: 60px 18px 20px; }
+    }
+
+    /* Animations */
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+    .section { animation: slideUp 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+    .section:nth-child(1){animation-delay:0.05s} .section:nth-child(2){animation-delay:0.12s}
+    .section:nth-child(3){animation-delay:0.19s} .section:nth-child(4){animation-delay:0.26s}
+    .section:nth-child(5){animation-delay:0.33s} .section:nth-child(6){animation-delay:0.40s}
+    /* Video error state */
+    .video-error {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 220px; background: var(--panel); gap: 10px;
+      font-family: 'JetBrains Mono', monospace; color: var(--text-lo);
+    }
+    .video-error-icon { font-size: 32px; }
+    .video-error-msg { font-size: 12px; color: var(--green-700); font-weight: 600; }
+    .video-error-path { font-size: 10px; color: var(--text-lo); opacity: 0.7; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="topnav">
+  <a class="nav-logo" href="#">
+    <span class="nav-logo-dot"></span>RVST
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#contribution">Contribution</a>
+    <a class="nav-link" href="#methodology">Methodology</a>
+    <a class="nav-link" href="#casestudy">Case Study</a>
+    <a class="nav-link" href="#results">Results</a>
+    <a class="nav-link" href="#citation">BibTeX</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header>
+  <div class="hero-inner">
+    <div class="venue-badge">
+      <span class="venue-badge-dot"></span>
+      <!-- CHANGE ①: 2024 → 2026 -->
+      <span class="venue-badge-text">Traffic Emission Research · 2026</span>
+      <span class="venue-spotlight">✦ arXiv</span>
+    </div>
+
+    <span class="hero-title">RVST</span>
+    <!-- CHANGE ②: Full acronym expansion -->
+    <span class="hero-title-expand">
+      <em>R</em>egenerating&nbsp;<em>V</em>ehicle&nbsp;<em>S</em>peed&nbsp;<em>T</em>rajectories
+    </span>
+    <!-- CHANGE ②: Updated full subtitle -->
+    <p class="hero-subtitle">
+      A Toolkit for Regenerating Vehicle Speed Trajectories to Connect<br>
+      Traffic Microsimulation with Vehicle Emission Models
+    </p>
+
+    <div class="authors-wrap">
+      <div class="authors-row">
+        <div class="author-card">
+          <span class="author-name">Shaomin Qin</span>
+          <span class="author-note">† Corresponding Author</span>
+          <div class="author-links">
+            <a class="author-link" href="https://github.com/qinshaomin77" target="_blank" title="GitHub">⟨/⟩</a>
+          </div>
+        </div>
+        <div class="author-card">
+          <span class="author-name">Haobing Liu</span>
+          <div class="author-links">
+            <a class="author-link" href="https://scholar.google.com/citations?user=e-8R2vMAAAAJ&hl=en" target="_blank" title="Google Scholar">🎓</a>
+          </div>
+        </div>
+      </div>
+      <div class="affil-row">
+        <span class="affil-tag">Tongji University</span>
+        <span class="affil-tag">LUMINOUS / EU Horizon</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn btn-primary" href="https://arxiv.org/abs/2409.17106" target="_blank">📄 arXiv Paper</a>
+      <a class="btn btn-ghost" href="https://github.com/qinshaomin77/RVST?tab=readme-ov-file" target="_blank">⟨/⟩ Source Code</a>
+      <a class="btn btn-ghost" href="#citation">📋 BibTeX</a>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- CHANGE ③: Teaser video updated to img/rvst.MP4 -->
+  <div class="teaser-wrap">
+    <video id="teaserVideo" controls loop muted preload="metadata"
+           poster="assets/animation/teaser_light.png"
+           onerror="showVideoError(this,'assets/animation/rvst.mp4')">
+      <source src="assets/animation/rvst.mp4" type="video/mp4">
+    </video>
+    <div class="teaser-caption">
+      <strong>RVST ·</strong> End-to-end workflow — from post-processing microsimulation trajectories to emission estimation and spatial distribution generation.
+    </div>
+  </div>
+
+  <!-- 01 Contribution -->
+  <section class="section" id="contribution">
+    <div class="section-num"><div class="section-num-badge">01</div>Contribution</div>
+    <h2 class="section-title">What We Propose</h2>
+    <div class="card">
+      <div class="card-accent-bar"></div>
+      <p class="card-lead">Our proposed <strong>RVST</strong> (<em>Regenerating Vehicle Speed Trajectories</em>) is a <span class="hl">simulation-independent, emission-oriented trajectory re-generation framework</span>. It bridges the gap between raw microsimulation output and accurate, physically plausible emission estimation. Our main contributions are:</p>
+      <div class="contrib-grid">
+        <div class="contrib-item">
+          <div class="contrib-num">01</div>
+          <div class="contrib-body">
+            <strong>Constrained RVST Optimization</strong>
+            <p>Incorporates acceleration-dependent jerk envelopes to generate physically plausible and car-following-feasible speed trajectories.</p>
+          </div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num">02</div>
+          <div class="contrib-body">
+            <strong>Reusable RVST Toolkit</strong>
+            <p>Developed to reproduce the end-to-end pipeline — from trajectory re-generation to emission estimation and spatial emission-field assessment.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 Methodology -->
+  <section class="section" id="methodology">
+    <div class="section-num"><div class="section-num-badge">02</div>Method</div>
+    <h2 class="section-title">Methodology</h2>
+    <div class="card">
+      <div class="card-accent-bar"></div>
+      <p class="card-lead">The RVST framework re-generates speed trajectories from raw microsimulation output through a constrained optimization pipeline that enforces physical plausibility and emission accuracy. It follows a clean three-stage workflow:</p>
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="step-circle">🚦</div>
+          <div class="step-label">Input</div>
+          <div class="step-sub">Raw microsimulation<br>trajectories (SUMO FCD)</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-circle">⚡</div>
+          <div class="step-label">RVST Optimize</div>
+          <div class="step-sub">Jerk-envelope constrained<br>speed trajectory optimization</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-circle">🌿</div>
+          <div class="step-label">Emission Estimation</div>
+          <div class="step-sub">EF lookup &amp; spatial<br>emission field mapping</div>
+        </div>
+      </div>
+    </div>
+    <div class="img-card">
+      <div class="img-wrap"><img src="assets/img/RVST_optimization_framework.png" alt="RVST Optimization Framework"></div>
+      <div class="img-caption">Fig. 1 — RVST optimization framework: constrained trajectory re-generation with acceleration-dependent jerk envelopes.</div>
+    </div>
+    <div class="img-card">
+      <div class="img-wrap"><img src="assets/img/TwoStage_solution_flow.png" alt="Two-Stage Solution Flow"></div>
+      <div class="img-caption">Fig. 2 — Two-stage solution flow for physically plausible and car-following-feasible speed trajectory generation.</div>
+    </div>
+  </section>
+
+  <!-- 03 Case Study -->
+  <section class="section" id="casestudy">
+    <div class="section-num"><div class="section-num-badge">03</div>Evaluation</div>
+    <h2 class="section-title">Case Study</h2>
+    <div class="card">
+      <div class="card-accent-bar"></div>
+      <p class="card-lead">Real-world validation on a signalized urban corridor with UAV-reconstructed trajectories and multiple car-following models calibrated against field measurements.</p>
+      <div class="specs-grid">
+        <div class="spec-card"><span class="spec-icon">📍</span><div class="spec-label">Area</div><div class="spec-value">Jiading North Road<br>Shanghai</div></div>
+        <div class="spec-card"><span class="spec-icon">🛸</span><div class="spec-label">Data Source</div><div class="spec-value">UAV aerial imagery<br>+ CV reconstruction</div></div>
+        <div class="spec-card"><span class="spec-icon">🚗</span><div class="spec-label">Car-Following Models</div><div class="spec-value">Wiedemann99<br>Krauss · IDM</div></div>
+        <div class="spec-card"><span class="spec-icon">📐</span><div class="spec-label">Baseline Method</div><div class="spec-value">SG-BD speed-domain<br>Savitzky-Golay</div></div>
+      </div>
+    </div>
+
+    <!-- CHANGE ④: Video carousel replacing static image -->
+    <div class="video-carousel" id="caseCarousel">
+      <div class="video-carousel-track" id="carouselTrack">
+        <!-- Slide 1: UAV area -->
+        <div class="video-carousel-slide">
+          <video id="carouselVid0" muted playsinline loop controls preload="metadata"
+                 onerror="showVideoError(this,'assets/animation/uav_area.mp4')">
+            <source src="assets/animation/uav_area.mp4" type="video/mp4">
+          </video>
+          <div class="slide-label-overlay">UAV-captured area</div>
+        </div>
+        <!-- Slide 2: SUMO simulation -->
+        <div class="video-carousel-slide">
+          <video id="carouselVid1" muted playsinline loop controls preload="metadata"
+                 onerror="showVideoError(this,'assets/animation/sumo_area.mp4')">
+            <source src="assets/animation/sumo_area.mp4" type="video/mp4">
+          </video>
+          <div class="slide-label-overlay">SUMO simulation area</div>
+        </div>
+      </div>
+
+      <!-- Prev / Next buttons -->
+      <button class="carousel-btn prev" onclick="carouselMove(-1)" aria-label="Previous">&#8592;</button>
+      <button class="carousel-btn next" onclick="carouselMove(1)" aria-label="Next">&#8594;</button>
+
+      <!-- Dot indicators -->
+      <div class="carousel-dots">
+        <button class="carousel-dot active" onclick="carouselGoTo(0)" aria-label="Slide 1"></button>
+        <button class="carousel-dot" onclick="carouselGoTo(1)" aria-label="Slide 2"></button>
+      </div>
+
+      <!-- Per-slide caption -->
+      <div class="carousel-caption">
+        <span class="active" id="cap0">Fig. 3a — UAV-captured area: Jiading North Road, Shanghai. Aerial trajectory reconstruction via computer vision.</span>
+        <span id="cap1">Fig. 3b — SUMO simulation area: corresponding microsimulation scene calibrated from UAV ground truth data.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 Results -->
+  <section class="section" id="results">
+    <div class="section-num"><div class="section-num-badge">04</div>Results</div>
+    <h2 class="section-title">Performance Evaluation</h2>
+    <div class="card">
+      <div class="card-accent-bar"></div>
+      <p class="card-lead">We evaluated RVST by comparing re-generated speed trajectories and resulting emission estimates against ground truth UAV-based measurements across three car-following models (Wiedemann99, Krauss, IDM) and baseline SG-BD smoothing.</p>
+    </div>
+    <div class="tabs-wrap">
+      <div class="tab-btns">
+        <button class="tab-btn active" onclick="openTab(event,'traj')">Trajectory Quality</button>
+        <button class="tab-btn" onclick="openTab(event,'emission')">Emission Estimation</button>
+      </div>
+      <div id="traj" class="tab-panel active">
+        <div class="sub-tab-btns">
+          <button class="sub-tab-btn active" onclick="openSubTab(event,'jerk')">Jerk Distribution</button>
+          <button class="sub-tab-btn" onclick="openSubTab(event,'speed')">Speed &amp; Acceleration</button>
+        </div>
+        <div id="jerk" class="sub-panel active">
+          <div class="metrics-hint">Jerk envelope compliance — RVST generates physically plausible trajectories within acceleration-dependent jerk bounds.</div>
+          <div class="img-card" style="margin-top:0;"><div class="img-wrap tall"><img src="assets/img/jerk_distribution.png" alt="Jerk Distribution"></div><div class="img-caption">Fig. 4 — Jerk distribution comparison: raw SUMO output vs SG-BD baseline vs RVST re-generated trajectories.</div></div>
+          <div class="img-card" style="margin-top:16px;"><div class="img-wrap"><img src="assets/img/jerk_envelope.png" alt="Jerk Envelope"></div><div class="img-caption">Fig. 5 — Acceleration-dependent jerk envelopes used in the RVST constrained optimization.</div></div>
+        </div>
+        <div id="speed" class="sub-panel">
+          <div class="metrics-hint">Speed and acceleration distribution of re-generated trajectories compared to UAV ground truth.</div>
+          <div class="img-card" style="margin-top:0;"><div class="img-wrap tall"><img src="assets/img/speed_accel_distribution.png" alt="Speed and Acceleration Distribution"></div><div class="img-caption">Fig. 6 — Speed and acceleration distribution: RVST vs SG-BD vs UAV ground truth across all car-following models.</div></div>
+        </div>
+      </div>
+      <div id="emission" class="tab-panel">
+        <div class="sub-tab-btns">
+          <button class="sub-tab-btn active" onclick="openSubTab(event,'compare')">Emission Comparison</button>
+          <button class="sub-tab-btn" onclick="openSubTab(event,'spatial')">Spatial Distribution</button>
+        </div>
+        <div id="compare" class="sub-panel active">
+          <div class="metrics-hint">Total emission estimates vs ground truth. RVST consistently outperforms SG-BD across all car-following models and pollutants.</div>
+          <div class="img-card" style="margin-top:0;"><div class="img-wrap"><img src="assets/img/Comparison_total_emissions.png" alt="Emission Comparison"></div><div class="img-caption">Fig. 7 — Total emission comparison: RVST vs SG-BD vs UAV ground truth (NOx, PM2.5, CO, CO2, THC).</div></div>
+        </div>
+        <div id="spatial" class="sub-panel">
+          <div class="metrics-hint">Grid-based spatial emission field distribution across the signalized corridor study area.</div>
+          <div class="img-grid-2">
+            <div class="img-card"><div class="img-wrap"><img src="assets/img/NOx_spatial_emission.png" alt="NOx Spatial Emission"></div><div class="img-caption">Fig. 8 — NOx spatial emission distribution along Jiading North Road.</div></div>
+            <div class="img-card"><div class="img-wrap"><img src="assets/img/PM25_spatial_emission.png" alt="PM2.5 Spatial Emission"></div><div class="img-caption">Fig. 9 — PM2.5 spatial emission distribution across the study corridor.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 Acknowledgement -->
+  <section class="section" id="acknowledgement">
+    <div class="section-num"><div class="section-num-badge">05</div>Funding</div>
+    <h2 class="section-title">Acknowledgement</h2>
+    <div class="ack-box">
+      <div class="ack-icon">🇪🇺</div>
+      <div>
+        <div class="ack-title">EU Horizon Europe Framework Programme</div>
+        <p class="ack-body">This work was in parts supported by the EU Horizon Europe Framework under grant agreement <code class="grant">101135724</code> (LUMINOUS).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 Citation -->
+  <section class="section" id="citation">
+    <div class="section-num"><div class="section-num-badge">06</div>Reference</div>
+    <h2 class="section-title">Citation</h2>
+    <p style="font-size:14px; color:var(--text-lo); margin-bottom:20px; font-family:'Outfit',sans-serif;">If you use our framework or dataset, please cite our work:</p>
+    <div class="citation-box">
+      <!-- CHANGE ①②: year → 2026, title updated to full name -->
+      <div class="citation-code" id="bibblock"><button class="copy-btn" onclick="copyBib()">📋 Copy</button><span class="cite-kw">@article</span>{<span class="cite-key">qin2026rvst</span>,
+  <span class="cite-kw">title</span>   = {RVST: A Toolkit for Regenerating Vehicle Speed Trajectories to Connect Traffic Microsimulation with Vehicle Emission Models},
+  <span class="cite-kw">author</span>  = {Shaomin Qin and Haobing Liu},
+  <span class="cite-kw">journal</span> = {arXiv preprint arXiv:2409.17106},
+  <span class="cite-kw">year</span>    = {2026},
+  <span class="cite-kw">url</span>     = {https://arxiv.org/abs/2409.17106},
+}</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">RVST</div>
+  <!-- CHANGE ①②: year 2026, Vehicle added -->
+  <p class="footer-desc">Regenerating Vehicle Speed Trajectories · Traffic Emission Research · 2026</p>
+  <div class="footer-links">
+    <a class="footer-link" href="https://arxiv.org/abs/2409.17106" target="_blank">arXiv Paper</a>
+    <a class="footer-link" href="https://github.com/qinshaomin77/RVST" target="_blank">Source Code</a>
+  </div>
+  <!-- CHANGE ①: 2024 → 2026 -->
+  <p class="footer-copy">© 2026 Shaomin Qin · Haobing Liu · All rights reserved.</p>
+</footer>
+
+<script>
+  /* ── Tab system ── */
+  function openTab(e, id) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    document.getElementById(id).classList.add('active');
+    const first = document.getElementById(id).querySelector('.sub-tab-btn');
+    if (first) first.click();
+  }
+  function openSubTab(e, id) {
+    const panel = e.currentTarget.closest('.tab-panel');
+    panel.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+    panel.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    document.getElementById(id).classList.add('active');
+  }
+
+  /* ── BibTeX copy ── */
+  function copyBib() {
+    const el = document.getElementById('bibblock');
+    const text = el.innerText.replace('📋 Copy', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = el.querySelector('.copy-btn');
+      btn.textContent = '✓ Copied!';
+      btn.style.color = 'var(--green-600)';
+      setTimeout(() => { btn.innerHTML = '📋 Copy'; btn.style.color = ''; }, 2200);
+    });
+  }
+
+  /* ── Video error handler ── */
+  function showVideoError(videoEl, path) {
+    const parent = videoEl.parentElement;
+    const label = parent.querySelector('.slide-label-overlay');
+    const labelText = label ? label.textContent : '';
+    videoEl.style.display = 'none';
+    const div = document.createElement('div');
+    div.className = 'video-error';
+    div.innerHTML = `
+      <span class="video-error-icon">🎬</span>
+      <span class="video-error-msg">Failed to load video${labelText ? ': ' + labelText : ''}</span>
+      <span class="video-error-path">Path: ${path}</span>
+      <span class="video-error-path">Please ensure the file exists on the server and the path is correct</span>`;
+    parent.insertBefore(div, videoEl);
+  }
+
+  /* ── CHANGE ④: Video Carousel logic ── */
+  let carouselIndex = 0;
+  const totalSlides = 2;
+
+  function carouselGoTo(idx) {
+    // pause current video
+    const currentVid = document.getElementById('carouselVid' + carouselIndex);
+    if (currentVid) { currentVid.pause(); }
+
+    carouselIndex = (idx + totalSlides) % totalSlides;
+
+    // move track
+    document.getElementById('carouselTrack').style.transform =
+      `translateX(-${carouselIndex * 100}%)`;
+
+    // update dots
+    document.querySelectorAll('.carousel-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === carouselIndex);
+    });
+
+    // update captions
+    document.querySelectorAll('.carousel-caption span').forEach((s, i) => {
+      s.classList.toggle('active', i === carouselIndex);
+    });
+
+    // play new video
+    const nextVid = document.getElementById('carouselVid' + carouselIndex);
+    if (nextVid) { nextVid.play().catch(() => {}); }
+  }
+
+  function carouselMove(dir) {
+    carouselGoTo(carouselIndex + dir);
+  }
+
+  // Autoplay first video on load
+  window.addEventListener('load', () => {
+    const v0 = document.getElementById('carouselVid0');
+    if (v0) v0.play().catch(() => {});
+  });
+
+  /* ── Nav active tracking ── */
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section.section');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(l => {
+          const active = l.getAttribute('href') === `#${id}`;
+          l.style.color = active ? 'var(--green-600)' : '';
+          l.style.background = active ? 'var(--green-50)' : '';
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
