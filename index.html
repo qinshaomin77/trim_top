@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RVST — Regenerating Vehicle Speed Trajectories</title>
+  <title>TRIM — Trajectory Refinement for Emission Modeling</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <style>
@@ -124,7 +124,6 @@
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
       display: block; margin-bottom: 14px; line-height: 1.0;
     }
-    /* ── CHANGE ②: Full title expansion below RVST acronym ── */
     .hero-title-expand {
       font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
       color: var(--green-600); letter-spacing: 0.10em; text-transform: uppercase;
@@ -134,7 +133,7 @@
     .hero-subtitle {
       font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 400;
       color: var(--text-lo); line-height: 1.55; margin-bottom: 56px;
-      max-width: 700px; margin-left: auto; margin-right: auto;
+      max-width: 760px; margin-left: auto; margin-right: auto;
     }
 
     /* Author cards */
@@ -153,14 +152,6 @@
     .author-card:hover { background: var(--green-50); border-color: var(--green-500); transform: translateY(-3px); box-shadow: var(--shadow-md); }
     .author-name { font-size: 16px; font-weight: 700; color: var(--text-md); }
     .author-note { font-size: 11px; color: var(--green-600); font-family: 'JetBrains Mono', monospace; }
-    .author-links { display: flex; gap: 8px; }
-    .author-link {
-      display: flex; align-items: center; justify-content: center;
-      width: 30px; height: 30px; border-radius: 7px;
-      background: var(--panel); border: 1px solid var(--border);
-      font-size: 14px; text-decoration: none; transition: all 0.15s; color: inherit;
-    }
-    .author-link:hover { background: var(--green-100); border-color: var(--green-500); transform: scale(1.12); }
     .affil-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
     .affil-tag {
       font-size: 12px; color: var(--text-lo); font-family: 'JetBrains Mono', monospace;
@@ -185,7 +176,7 @@
     /* ── MAIN ── */
     main { max-width: 1040px; margin: 0 auto; padding: 72px 60px 20px; position: relative; z-index: 1; }
 
-    /* ── CHANGE ③: Teaser video ── */
+    /* Teaser */
     .teaser-wrap { border-radius: 18px; overflow: hidden; border: 2px solid var(--border); box-shadow: var(--shadow-lg); margin-bottom: 88px; }
     .teaser-wrap video { width: 100%; display: block; }
     .teaser-caption { background: var(--panel); color: var(--text-lo); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 13px 22px; border-top: 1px solid var(--border); letter-spacing: 0.04em; }
@@ -240,7 +231,7 @@
     .img-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 0; }
     .img-grid-2 .img-card { margin-top: 0; }
 
-    /* ── CHANGE ④: Video Carousel for Case Study ── */
+    /* Video Carousel */
     .video-carousel {
       background: var(--surface); border: 1.5px solid var(--border);
       border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-sm); margin-top: 20px;
@@ -250,22 +241,14 @@
       display: flex; transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
       will-change: transform;
     }
-    .video-carousel-slide {
-      min-width: 100%; position: relative;
-    }
-    .video-carousel-slide video {
-      width: 100%; display: block; max-height: 420px; object-fit: contain;
-      background: #000;
-    }
-    /* slide label overlay */
+    .video-carousel-slide { min-width: 100%; position: relative; }
+    .video-carousel-slide video { width: 100%; display: block; max-height: 420px; object-fit: contain; background: #000; }
     .slide-label-overlay {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 10px 18px;
+      position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 18px;
       background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%);
       font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
       color: rgba(255,255,255,0.92); letter-spacing: 0.08em; pointer-events: none;
     }
-    /* nav arrows */
     .carousel-btn {
       position: absolute; top: 50%; transform: translateY(-50%);
       width: 40px; height: 40px; border-radius: 50%;
@@ -278,24 +261,10 @@
     .carousel-btn:hover { background: var(--green-50); border-color: var(--green-600); transform: translateY(-50%) scale(1.08); }
     .carousel-btn.prev { left: 14px; }
     .carousel-btn.next { right: 14px; }
-    /* dots */
-    .carousel-dots {
-      display: flex; justify-content: center; gap: 8px;
-      padding: 12px 20px; background: var(--panel); border-top: 1px solid var(--border);
-    }
-    .carousel-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--border-mid); border: none; cursor: pointer;
-      transition: all 0.2s; padding: 0;
-    }
+    .carousel-dots { display: flex; justify-content: center; gap: 8px; padding: 12px 20px; background: var(--panel); border-top: 1px solid var(--border); }
+    .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-mid); border: none; cursor: pointer; transition: all 0.2s; padding: 0; }
     .carousel-dot.active { background: var(--green-600); transform: scale(1.3); }
-    /* caption under dots */
-    .carousel-caption {
-      padding: 10px 20px 14px; font-family: 'JetBrains Mono', monospace;
-      font-size: 11px; color: var(--text-lo); line-height: 1.55;
-      border-top: 1px solid var(--border); background: var(--panel);
-      text-align: left;
-    }
+    .carousel-caption { padding: 10px 20px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-lo); line-height: 1.55; border-top: 1px solid var(--border); background: var(--panel); text-align: left; }
     .carousel-caption span { display: none; }
     .carousel-caption span.active { display: inline; }
 
@@ -365,12 +334,8 @@
     .section:nth-child(1){animation-delay:0.05s} .section:nth-child(2){animation-delay:0.12s}
     .section:nth-child(3){animation-delay:0.19s} .section:nth-child(4){animation-delay:0.26s}
     .section:nth-child(5){animation-delay:0.33s} .section:nth-child(6){animation-delay:0.40s}
-    /* Video error state */
-    .video-error {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 220px; background: var(--panel); gap: 10px;
-      font-family: 'JetBrains Mono', monospace; color: var(--text-lo);
-    }
+
+    .video-error { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px; background: var(--panel); gap: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-lo); }
     .video-error-icon { font-size: 32px; }
     .video-error-msg { font-size: 12px; color: var(--green-700); font-weight: 600; }
     .video-error-path { font-size: 10px; color: var(--text-lo); opacity: 0.7; }
@@ -381,7 +346,7 @@
 <!-- NAV -->
 <nav id="topnav">
   <a class="nav-logo" href="#">
-    <span class="nav-logo-dot"></span>RVST
+    <span class="nav-logo-dot"></span>TRIM
   </a>
   <div class="nav-links">
     <a class="nav-link" href="#contribution">Contribution</a>
@@ -397,29 +362,32 @@
   <div class="hero-inner">
     <div class="venue-badge">
       <span class="venue-badge-dot"></span>
-      <!-- CHANGE ①: 2024 → 2026 -->
       <span class="venue-badge-text">Traffic Emission Research · 2026</span>
     </div>
 
-    <span class="hero-title">RVST</span>
-    <!-- CHANGE ②: Full acronym expansion -->
+    <span class="hero-title">TRIM</span>
     <span class="hero-title-expand">
-      <em>R</em>egenerating&nbsp;<em>V</em>ehicle&nbsp;<em>S</em>peed&nbsp;<em>T</em>rajectories
+      <em>T</em>rajectory&nbsp;<em>R</em>efinement&nbsp;for&nbsp;em<em>I</em>ssion&nbsp;<em>M</em>odeling
     </span>
-    <!-- CHANGE ②: Updated full subtitle -->
     <p class="hero-subtitle">
-      A Toolkit for Regenerating Vehicle Speed Trajectories to Connect<br>
-      Traffic Microsimulation with Vehicle Emission Models
+      A Simulation-Independent Toolkit for<br>
+      Vehicle Speed Trajectory Refinement in Emission Modeling
     </p>
 
     <div class="authors-wrap">
       <div class="authors-row">
-        <div class="author-card">
+        <a class="author-card" href="https://github.com/qinshaomin77" target="_blank" style="text-decoration:none;">
           <span class="author-name">Shaomin Qin</span>
-        </div>
-        <div class="author-card">
+        </a>
+        <a class="author-card" href="https://scholar.google.com/citations?user=e-8R2vMAAAAJ&hl=en" target="_blank" style="text-decoration:none;">
           <span class="author-name">Haobing Liu</span>
-        </div>
+        </a>
+        <a class="author-card" href="https://ieeexplore.ieee.org/author/37088478561" target="_blank" style="text-decoration:none;">
+          <span class="author-name">Lishengsa Yue</span>
+        </a>
+      </div>
+      <div class="affil-row">
+        <span class="affil-tag">Tongji University</span>
       </div>
     </div>
 
@@ -434,15 +402,15 @@
 <!-- MAIN -->
 <main>
 
-  <!-- CHANGE ③: Teaser video updated to img/rvst.MP4 -->
+  <!-- Teaser -->
   <div class="teaser-wrap">
     <video id="teaserVideo" controls loop muted preload="metadata"
            poster="assets/animation/teaser_light.png"
-           onerror="showVideoError(this,'assets/animation/rvst.mp4')">
-      <source src="assets/animation/rvst.mp4" type="video/mp4">
+           onerror="showVideoError(this,'assets/animation/trim.mp4')">
+      <source src="assets/animation/trim.mp4" type="video/mp4">
     </video>
     <div class="teaser-caption">
-      <strong>RVST ·</strong> End-to-end workflow — from post-processing microsimulation trajectories to emission estimation and spatial distribution generation.
+      <strong>TRIM ·</strong> End-to-end workflow — from post-processing microsimulation trajectories to physically consistent trajectory refinement and emission estimation.
     </div>
   </div>
 
@@ -452,20 +420,20 @@
     <h2 class="section-title">What We Propose</h2>
     <div class="card">
       <div class="card-accent-bar"></div>
-      <p class="card-lead">Our proposed <strong>RVST</strong> (<em>Regenerating Vehicle Speed Trajectories</em>) is a <span class="hl">simulation-independent, emission-oriented trajectory re-generation framework</span>. It bridges the gap between raw microsimulation output and accurate, physically plausible emission estimation. Our main contributions are:</p>
+      <p class="card-lead">Our proposed <strong>TRIM</strong> (<em>Trajectory Refinement for emIssion Modeling</em>) is a <span class="hl">simulation-platform-independent, emission-oriented trajectory refinement framework</span>. It bridges the gap between raw microsimulation output and accurate, physically plausible emission estimation. Our main contributions are:</p>
       <div class="contrib-grid">
         <div class="contrib-item">
           <div class="contrib-num">01</div>
           <div class="contrib-body">
-            <strong>Constrained RVST Optimization</strong>
-            <p>Incorporates acceleration-dependent jerk envelopes to generate physically plausible and car-following-feasible speed trajectories.</p>
+            <strong>Constrained TRIM Optimization</strong>
+            <p>Incorporates acceleration-dependent jerk envelopes within a tractable MIQP framework to generate physically plausible and car-following-feasible speed trajectories.</p>
           </div>
         </div>
         <div class="contrib-item">
           <div class="contrib-num">02</div>
           <div class="contrib-body">
-            <strong>Reusable RVST Toolkit</strong>
-            <p>Developed to reproduce the end-to-end pipeline — from trajectory re-generation to emission estimation and spatial emission-field assessment.</p>
+            <strong>Reusable TRIM Toolkit</strong>
+            <p>Developed to reproduce the end-to-end pipeline — from trajectory refinement to emission estimation and spatial emission-field assessment — across diverse microsimulation platforms.</p>
           </div>
         </div>
       </div>
@@ -478,7 +446,7 @@
     <h2 class="section-title">Methodology</h2>
     <div class="card">
       <div class="card-accent-bar"></div>
-      <p class="card-lead">The RVST framework re-generates speed trajectories from raw microsimulation output through a constrained optimization pipeline that enforces physical plausibility and emission accuracy. It follows a clean three-stage workflow:</p>
+      <p class="card-lead">The TRIM framework refines speed trajectories from raw microsimulation output through a constrained optimization pipeline that enforces physical plausibility and emission accuracy. It follows a clean three-stage workflow:</p>
       <div class="pipeline">
         <div class="pipeline-step">
           <div class="step-circle">🚦</div>
@@ -487,8 +455,8 @@
         </div>
         <div class="pipeline-step">
           <div class="step-circle">⚡</div>
-          <div class="step-label">RVST Optimize</div>
-          <div class="step-sub">Jerk-envelope constrained<br>speed trajectory optimization</div>
+          <div class="step-label">TRIM Optimize</div>
+          <div class="step-sub">Jerk-envelope constrained<br>two-stage MIQP refinement</div>
         </div>
         <div class="pipeline-step">
           <div class="step-circle">🌿</div>
@@ -498,12 +466,12 @@
       </div>
     </div>
     <div class="img-card">
-      <div class="img-wrap"><img src="assets/img/RVST_optimization_framework.png" alt="RVST Optimization Framework"></div>
-      <div class="img-caption">Fig. 1 — RVST optimization framework: constrained trajectory re-generation with acceleration-dependent jerk envelopes.</div>
+      <div class="img-wrap"><img src="assets/img/TRIM_optimization_framework.png" alt="TRIM Optimization Framework"></div>
+      <div class="img-caption">Fig. 1 — TRIM optimization framework: constrained trajectory refinement with acceleration-dependent jerk envelopes.</div>
     </div>
     <div class="img-card">
       <div class="img-wrap"><img src="assets/img/TwoStage_solution_flow.png" alt="Two-Stage Solution Flow"></div>
-      <div class="img-caption">Fig. 2 — Two-stage solution flow for physically plausible and car-following-feasible speed trajectory generation.</div>
+      <div class="img-caption">Fig. 2 — Two-stage solution procedure of the TRIM optimization framework.</div>
     </div>
   </section>
 
@@ -517,15 +485,13 @@
       <div class="specs-grid">
         <div class="spec-card"><span class="spec-icon">📍</span><div class="spec-label">Area</div><div class="spec-value">Jiading North Road<br>Shanghai</div></div>
         <div class="spec-card"><span class="spec-icon">🛸</span><div class="spec-label">Data Source</div><div class="spec-value">UAV aerial imagery<br>+ CV reconstruction</div></div>
-        <div class="spec-card"><span class="spec-icon">🚗</span><div class="spec-label">Car-Following Models</div><div class="spec-value">Wiedemann99<br>Krauss · IDM</div></div>
-        <div class="spec-card"><span class="spec-icon">📐</span><div class="spec-label">Baseline Method</div><div class="spec-value">SG-BD speed-domain<br>Savitzky-Golay</div></div>
+        <div class="spec-card"><span class="spec-icon">🚗</span><div class="spec-label">Car-Following Models</div><div class="spec-value">W99 · Krauss · IDM</div></div>
+        <div class="spec-card"><span class="spec-icon">📐</span><div class="spec-label">Baseline Method</div><div class="spec-value">SGS speed-domain<br>Savitzky-Golay</div></div>
       </div>
     </div>
 
-    <!-- CHANGE ④: Video carousel replacing static image -->
     <div class="video-carousel" id="caseCarousel">
       <div class="video-carousel-track" id="carouselTrack">
-        <!-- Slide 1: UAV area -->
         <div class="video-carousel-slide">
           <video id="carouselVid0" muted playsinline loop controls preload="metadata"
                  onerror="showVideoError(this,'assets/animation/uav_area.mp4')">
@@ -533,7 +499,6 @@
           </video>
           <div class="slide-label-overlay">UAV-captured area</div>
         </div>
-        <!-- Slide 2: SUMO simulation -->
         <div class="video-carousel-slide">
           <video id="carouselVid1" muted playsinline loop controls preload="metadata"
                  onerror="showVideoError(this,'assets/animation/sumo_area.mp4')">
@@ -542,18 +507,12 @@
           <div class="slide-label-overlay">SUMO simulation area</div>
         </div>
       </div>
-
-      <!-- Prev / Next buttons -->
       <button class="carousel-btn prev" onclick="carouselMove(-1)" aria-label="Previous">&#8592;</button>
       <button class="carousel-btn next" onclick="carouselMove(1)" aria-label="Next">&#8594;</button>
-
-      <!-- Dot indicators -->
       <div class="carousel-dots">
         <button class="carousel-dot active" onclick="carouselGoTo(0)" aria-label="Slide 1"></button>
         <button class="carousel-dot" onclick="carouselGoTo(1)" aria-label="Slide 2"></button>
       </div>
-
-      <!-- Per-slide caption -->
       <div class="carousel-caption">
         <span class="active" id="cap0">Fig. 3a — UAV-captured area: Jiading North Road, Shanghai. Aerial trajectory reconstruction via computer vision.</span>
         <span id="cap1">Fig. 3b — SUMO simulation area: corresponding microsimulation scene calibrated from UAV ground truth data.</span>
@@ -567,7 +526,7 @@
     <h2 class="section-title">Performance Evaluation</h2>
     <div class="card">
       <div class="card-accent-bar"></div>
-      <p class="card-lead">We evaluated RVST by comparing re-generated speed trajectories and resulting emission estimates against ground truth UAV-based measurements across three car-following models (Wiedemann99, Krauss, IDM) and baseline SG-BD smoothing.</p>
+      <p class="card-lead">We evaluated TRIM by comparing refined speed trajectories and resulting emission estimates against ground-truth UAV-based measurements across three car-following models (W99, Krauss, IDM) and baseline SGS smoothing. Total estimation errors are attenuated to within <strong>9% for NO<sub>x</sub></strong> and <strong>7% for PM<sub>2.5</sub></strong>.</p>
     </div>
     <div class="tabs-wrap">
       <div class="tab-btns">
@@ -580,13 +539,13 @@
           <button class="sub-tab-btn" onclick="openSubTab(event,'speed')">Speed &amp; Acceleration</button>
         </div>
         <div id="jerk" class="sub-panel active">
-          <div class="metrics-hint">Jerk envelope compliance — RVST generates physically plausible trajectories within acceleration-dependent jerk bounds.</div>
-          <div class="img-card" style="margin-top:0;"><div class="img-wrap tall"><img src="assets/img/jerk_distribution.png" alt="Jerk Distribution"></div><div class="img-caption">Fig. 4 — Jerk distribution comparison: raw SUMO output vs SG-BD baseline vs RVST re-generated trajectories.</div></div>
-          <div class="img-card" style="margin-top:16px;"><div class="img-wrap"><img src="assets/img/jerk_envelope.png" alt="Jerk Envelope"></div><div class="img-caption">Fig. 5 — Acceleration-dependent jerk envelopes used in the RVST constrained optimization.</div></div>
+          <div class="metrics-hint">Jerk envelope compliance — TRIM generates physically plausible trajectories within acceleration-dependent jerk bounds.</div>
+          <div class="img-card" style="margin-top:0;"><div class="img-wrap tall"><img src="assets/img/jerk_distribution.png" alt="Jerk Distribution"></div><div class="img-caption">Fig. 4 — Jerk distribution comparison: raw SUMO output vs SGS baseline vs TRIM refined trajectories.</div></div>
+          <div class="img-card" style="margin-top:16px;"><div class="img-wrap"><img src="assets/img/jerk_envelope.png" alt="Jerk Envelope"></div><div class="img-caption">Fig. 5 — Acceleration-dependent jerk envelopes used in the TRIM constrained optimization.</div></div>
         </div>
         <div id="speed" class="sub-panel">
-          <div class="metrics-hint">Speed and acceleration distribution of re-generated trajectories compared to UAV ground truth.</div>
-          <div class="img-card" style="margin-top:0;"><div class="img-wrap tall"><img src="assets/img/speed_accel_distribution.png" alt="Speed and Acceleration Distribution"></div><div class="img-caption">Fig. 6 — Speed and acceleration distribution: RVST vs SG-BD vs UAV ground truth across all car-following models.</div></div>
+          <div class="metrics-hint">Speed and acceleration distribution of refined trajectories compared to UAV ground truth.</div>
+          <div class="img-card" style="margin-top:0;"><div class="img-wrap tall"><img src="assets/img/speed_accel_distribution.png" alt="Speed and Acceleration Distribution"></div><div class="img-caption">Fig. 6 — Speed and acceleration distribution: TRIM vs SGS vs UAV ground truth across all car-following models.</div></div>
         </div>
       </div>
       <div id="emission" class="tab-panel">
@@ -595,8 +554,8 @@
           <button class="sub-tab-btn" onclick="openSubTab(event,'spatial')">Spatial Distribution</button>
         </div>
         <div id="compare" class="sub-panel active">
-          <div class="metrics-hint">Total emission estimates vs ground truth. RVST consistently outperforms SG-BD across all car-following models and pollutants.</div>
-          <div class="img-card" style="margin-top:0;"><div class="img-wrap"><img src="assets/img/Comparison_total_emissions.png" alt="Emission Comparison"></div><div class="img-caption">Fig. 7 — Total emission comparison: RVST vs SG-BD vs UAV ground truth (NOx, PM2.5, CO, CO2, THC).</div></div>
+          <div class="metrics-hint">Total emission estimates vs ground truth. TRIM consistently outperforms SGS across all car-following models and pollutants.</div>
+          <div class="img-card" style="margin-top:0;"><div class="img-wrap"><img src="assets/img/Comparison_total_emissions.png" alt="Emission Comparison"></div><div class="img-caption">Fig. 7 — Total emission comparison: TRIM vs SGS vs UAV ground truth (NOx, PM2.5, CO, CO2, THC).</div></div>
         </div>
         <div id="spatial" class="sub-panel">
           <div class="metrics-hint">Grid-based spatial emission field distribution across the signalized corridor study area.</div>
@@ -628,10 +587,9 @@
     <h2 class="section-title">Citation</h2>
     <p style="font-size:14px; color:var(--text-lo); margin-bottom:20px; font-family:'Outfit',sans-serif;">If you use our framework or dataset, please cite our work:</p>
     <div class="citation-box">
-      <!-- CHANGE ①②: year → 2026, title updated to full name -->
-      <div class="citation-code" id="bibblock"><button class="copy-btn" onclick="copyBib()">📋 Copy</button><span class="cite-kw">@article</span>{<span class="cite-key">qin2026rvst</span>,
-  <span class="cite-kw">title</span>   = {RVST: A Toolkit for Regenerating Vehicle Speed Trajectories to Connect Traffic Microsimulation with Vehicle Emission Models},
-  <span class="cite-kw">author</span>  = {Shaomin Qin and Haobing Liu},
+      <div class="citation-code" id="bibblock"><button class="copy-btn" onclick="copyBib()">📋 Copy</button><span class="cite-kw">@article</span>{<span class="cite-key">qin2026trim</span>,
+  <span class="cite-kw">title</span>   = {TRIM: A Simulation-Independent Toolkit for Vehicle Speed Trajectory Refinement in Emission Modeling},
+  <span class="cite-kw">author</span>  = {Shaomin Qin and Haobing Liu and Lishengsa Yue},
   <span class="cite-kw">year</span>    = {2026},
 }</div>
     </div>
@@ -641,18 +599,15 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">RVST</div>
-  <!-- CHANGE ①②: year 2026, Vehicle added -->
-  <p class="footer-desc">Regenerating Vehicle Speed Trajectories · Traffic Emission Research · 2026</p>
+  <div class="footer-logo">TRIM</div>
+  <p class="footer-desc">Trajectory Refinement for Emission Modeling · Traffic Emission Research · 2026</p>
   <div class="footer-links">
     <a class="footer-link" href="https://github.com/qinshaomin77/RVST" target="_blank">Source Code</a>
   </div>
-  <!-- CHANGE ①: 2024 → 2026 -->
-  <p class="footer-copy">© 2026 Shaomin Qin · Haobing Liu · All rights reserved.</p>
+  <p class="footer-copy">© 2026 Shaomin Qin · Haobing Liu · Lishengsa Yue · All rights reserved.</p>
 </footer>
 
 <script>
-  /* ── Tab system ── */
   function openTab(e, id) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -669,7 +624,6 @@
     document.getElementById(id).classList.add('active');
   }
 
-  /* ── BibTeX copy ── */
   function copyBib() {
     const el = document.getElementById('bibblock');
     const text = el.innerText.replace('📋 Copy', '').trim();
@@ -681,7 +635,6 @@
     });
   }
 
-  /* ── Video error handler ── */
   function showVideoError(videoEl, path) {
     const parent = videoEl.parentElement;
     const label = parent.querySelector('.slide-label-overlay');
@@ -692,52 +645,31 @@
     div.innerHTML = `
       <span class="video-error-icon">🎬</span>
       <span class="video-error-msg">Failed to load video${labelText ? ': ' + labelText : ''}</span>
-      <span class="video-error-path">Path: ${path}</span>
-      <span class="video-error-path">Please ensure the file exists on the server and the path is correct</span>`;
+      <span class="video-error-path">Path: ${path}</span>`;
     parent.insertBefore(div, videoEl);
   }
 
-  /* ── CHANGE ④: Video Carousel logic ── */
   let carouselIndex = 0;
   const totalSlides = 2;
 
   function carouselGoTo(idx) {
-    // pause current video
     const currentVid = document.getElementById('carouselVid' + carouselIndex);
-    if (currentVid) { currentVid.pause(); }
-
+    if (currentVid) currentVid.pause();
     carouselIndex = (idx + totalSlides) % totalSlides;
-
-    // move track
-    document.getElementById('carouselTrack').style.transform =
-      `translateX(-${carouselIndex * 100}%)`;
-
-    // update dots
-    document.querySelectorAll('.carousel-dot').forEach((d, i) => {
-      d.classList.toggle('active', i === carouselIndex);
-    });
-
-    // update captions
-    document.querySelectorAll('.carousel-caption span').forEach((s, i) => {
-      s.classList.toggle('active', i === carouselIndex);
-    });
-
-    // play new video
+    document.getElementById('carouselTrack').style.transform = `translateX(-${carouselIndex * 100}%)`;
+    document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
+    document.querySelectorAll('.carousel-caption span').forEach((s, i) => s.classList.toggle('active', i === carouselIndex));
     const nextVid = document.getElementById('carouselVid' + carouselIndex);
-    if (nextVid) { nextVid.play().catch(() => {}); }
+    if (nextVid) nextVid.play().catch(() => {});
   }
 
-  function carouselMove(dir) {
-    carouselGoTo(carouselIndex + dir);
-  }
+  function carouselMove(dir) { carouselGoTo(carouselIndex + dir); }
 
-  // Autoplay first video on load
   window.addEventListener('load', () => {
     const v0 = document.getElementById('carouselVid0');
     if (v0) v0.play().catch(() => {});
   });
 
-  /* ── Nav active tracking ── */
   const navLinks = document.querySelectorAll('.nav-link');
   const sections = document.querySelectorAll('section.section');
   const observer = new IntersectionObserver(entries => {
