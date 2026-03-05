@@ -9,7 +9,7 @@
 **A Simulation-Independent Toolkit for**  
 **Vehicle Speed Trajectory Refinement in Emission Modeling**
 
-[🌐 Project Page](https://qinshaomin77.github.io/trim_top) · [⟨/⟩ Code](https://github.com/qinshaomin77/trim_web) · [📋 BibTeX](#citation)
+[🌐 Project Page](https://qinshaomin77.github.io/trim_top) · [🎬 Demo](https://www.youtube.com/watch?v=KDPiDGzVudo) · [⟨/⟩ Code](https://github.com/qinshaomin77/trim_web) · [📋 BibTeX](#citation)
 
 </div>
 
